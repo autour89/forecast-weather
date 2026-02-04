@@ -1,0 +1,64 @@
+# Visual Studio / .NET
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Rider
+.idea/
+
+# Mac
+.DS_Store
+
+# NuGet
+*.nupkg
+.nuget/
+
+# VS Code workspace
+*.code-workspace
+
+# Logs
+*.log
+
+# Certificates
+*.pfx
+
+# SQLite DBs or other local data
+*.db
+*.sqlite
+
+# MAUI specific
+.maui/
+
+# Ignore published app bundles
+**/bin/*/net*/**/*
+**/obj/*/net*/**/*
+
+# User secrets
+secrets.json
+
+# Ignore local settings
+Properties/launchSettings.json
+
+# Temporary files
+*.tmp
+*~
+
+# Ignore JetBrains Rider caches
+.idea/
+
+# Binaries
+*.dll
+*.exe
+
+# Packages
+packages/
