@@ -81,7 +81,7 @@ public static class MauiProgram
 
     private static IServiceCollection RegisterApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<WeatherHttpClientFactory>();
+        services.AddScoped<HttpClientFactory>();
         services.AddScoped<IWeatherService, WeatherService>();
         services.AddScoped<ISettingsService, SettingsService>();
         services.AddSingleton<ILocationService, LocationService>();

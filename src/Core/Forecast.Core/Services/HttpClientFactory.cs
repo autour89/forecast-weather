@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Forecast.Core.Configuration;
@@ -7,7 +6,7 @@ using Serilog;
 
 namespace Forecast.Core.Services;
 
-public class WeatherHttpClientFactory
+public class HttpClientFactory
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
     private HttpClient? _httpClient;
@@ -15,7 +14,7 @@ public class WeatherHttpClientFactory
     private readonly Lock _lock = new();
     private readonly ILogger _logger;
 
-    public WeatherHttpClientFactory(ILogger logger)
+    public HttpClientFactory(ILogger logger)
     {
         _logger = logger;
         _deserializerOptions = new JsonSerializerOptions

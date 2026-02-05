@@ -6,10 +6,10 @@ using Serilog;
 
 namespace Forecast.Core.Services;
 
-public class WeatherService(ILogger logger, WeatherHttpClientFactory httpClientFactory)
+public class WeatherService(ILogger logger, HttpClientFactory httpClientFactory)
     : IWeatherService
 {
-    private readonly WeatherHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly HttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly ILogger _logger = logger;
 
     public async Task<WeatherData?> GetWeatherByCoordinatesAsync(double latitude, double longitude)
