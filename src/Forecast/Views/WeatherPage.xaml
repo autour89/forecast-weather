@@ -36,8 +36,8 @@
                         
                         <Button Grid.Column="2"
                                 Text="📍 Here" 
-                                Command="{Binding GetCurrentLocationWeatherCommand}"
-                                IsEnabled="{Binding GetCurrentLocationWeatherCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
+                                Command="{Binding CurrentLocationCommand}"
+                                IsEnabled="{Binding CurrentLocationCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
                     </Grid>
                 </Border>
 
@@ -65,9 +65,8 @@
                         Padding="20">
                     <Grid ColumnDefinitions="Auto,*" 
                           ColumnSpacing="16">
-                        <!-- Weather Icon -->
                         <Image Grid.Column="0"
-                               Source="{Binding IconUrl}" 
+                               Source="{Binding Data.IconUrl}" 
                                WidthRequest="100" 
                                HeightRequest="100" 
                                Aspect="AspectFit"
@@ -76,24 +75,78 @@
                         <VerticalStackLayout Grid.Column="1" 
                                            Spacing="4"
                                            VerticalOptions="Center">
-                            <Label Text="{Binding CityName}" 
+                            <Label Text="{Binding Data.CityName}" 
                                    FontSize="24" 
                                    FontAttributes="Bold"
                                    TextColor="{StaticResource TextPrimaryBrush}"/>
                             
-                            <Label Text="{Binding TemperatureDisplay}" 
+                            <Label Text="{Binding Data.TemperatureDisplay}" 
                                    FontSize="48" 
                                    FontAttributes="Bold"
                                    TextColor="{StaticResource Primary}"/>
                             
-                            <Label Text="{Binding FeelsLikeDisplay}" 
+                            <Label Text="{Binding Data.FeelsLikeDisplay}" 
                                    FontSize="16"
                                    TextColor="{StaticResource TextSecondaryBrush}"/>
                             
-                            <Label Text="{Binding Description}" 
+                            <Label Text="{Binding Data.Description}" 
                                    FontSize="16"
                                    TextColor="{StaticResource TextSecondaryBrush}"
                                    TextTransform="Uppercase"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <Border IsVisible="{Binding HasWeatherData}"
+                        StrokeThickness="1"
+                        Stroke="{StaticResource BorderBrush}"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{StaticResource CardBackgroundBrush}"
+                        Padding="20">
+                    <Grid RowDefinitions="Auto,Auto,Auto" 
+                          ColumnDefinitions="*,*"
+                          RowSpacing="12"
+                          ColumnSpacing="16">
+                        
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                            <Label Text="💧 Humidity" 
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextSecondaryBrush}"/>
+                            <Label Text="{Binding Data.Humidity, StringFormat='{0}%'}" 
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                        </VerticalStackLayout>
+
+                        <!-- Wind Speed -->
+                        <VerticalStackLayout Grid.Row="0" Grid.Column="1">
+                            <Label Text="💨 Wind Speed" 
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextSecondaryBrush}"/>
+                            <Label Text="{Binding Data.WindSpeed, StringFormat='{0:F1} m/s'}" 
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="0">
+                            <Label Text="🌡️ Pressure" 
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextSecondaryBrush}"/>
+                            <Label Text="{Binding Data.Pressure, StringFormat='{0} hPa'}" 
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                            <Label Text="🌍 Country" 
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextSecondaryBrush}"/>
+                            <Label Text="{Binding Data.Country}" 
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -120,14 +173,15 @@
                                     HorizontalOptions="End"/>
                         </Grid>
                         
-                        <Grid ColumnDefinitions="*,Auto">
+                        <Grid ColumnDefinitions="*,Auto"
+                              IsVisible="{Binding HasWeatherData}">
                             <Label Grid.Column="0"
                                    Text="🌡️ Use Celsius" 
                                    VerticalOptions="Center"
                                    FontSize="16"
                                    TextColor="{StaticResource TextPrimaryBrush}"/>
                             <Switch Grid.Column="1"
-                                    IsToggled="{Binding UseCelsius, Mode=TwoWay}" 
+                                    IsToggled="{Binding Data.UseCelsius, Mode=TwoWay}" 
                                     HorizontalOptions="End"/>
                         </Grid>
                     </VerticalStackLayout>

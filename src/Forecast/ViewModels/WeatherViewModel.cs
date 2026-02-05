@@ -14,12 +14,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     private readonly ILogger _logger;
 
     private string _searchCity = string.Empty;
-    private string _temperatureDisplay = string.Empty;
-    private string _feelsLikeDisplay = string.Empty;
-    private string _description = string.Empty;
-    private string _cityName = string.Empty;
     private bool _isDarkTheme;
-    private bool _useCelsius = true;
 
     public WeatherViewModel(
         IWeatherService weatherService,
@@ -36,7 +31,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         _logger = logger;
 
         SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
-        GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationAsync);
+        CurrentLocationCommand = new AsyncCommand(CurrentLocationAsync);
         RefreshCommand = new AsyncCommand(RefreshWeatherAsync);
 
         _ = InitializeAsync();
@@ -49,32 +44,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         get => _searchCity;
         set => SetProperty(ref _searchCity, value);
     }
-
-    public string TemperatureDisplay
-    {
-        get => _temperatureDisplay;
-        set => SetProperty(ref _temperatureDisplay, value);
-    }
-
-    public string FeelsLikeDisplay
-    {
-        get => _feelsLikeDisplay;
-        set => SetProperty(ref _feelsLikeDisplay, value);
-    }
-
-    public string Description
-    {
-        get => _description;
-        set => SetProperty(ref _description, value);
-    }
-
-    public string CityName
-    {
-        get => _cityName;
-        set => SetProperty(ref _cityName, value);
-    }
-
-    public string IconUrl => Data?.IconUrl ?? string.Empty;
 
     public bool IsDarkTheme
     {
@@ -89,19 +58,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    public bool UseCelsius
-    {
-        get => _useCelsius;
-        set
-        {
-            if (SetProperty(ref _useCelsius, value))
-            {
-                UpdateTemperatureDisplay();
-                _ = _settingsService.SetUseCelsiusAsync(value);
-            }
-        }
-    }
-
     public bool HasWeatherData => Data != null;
 
     #endregion
@@ -109,7 +65,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     #region Commands
 
     public AsyncCommand SearchWeatherCommand { get; }
-    public AsyncCommand GetCurrentLocationWeatherCommand { get; }
+    public AsyncCommand CurrentLocationCommand { get; }
     public AsyncCommand RefreshCommand { get; }
 
     #endregion
@@ -130,7 +86,10 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             IsDarkTheme = await _settingsService.GetIsDarkThemeAsync();
             ApplyTheme(IsDarkTheme);
 
-            UseCelsius = await _settingsService.GetUseCelsiusAsync();
+            if (!string.IsNullOrEmpty(lastCity))
+            {
+                await SearchWeatherAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -139,8 +98,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     }
 
     #endregion
-
-    #region Command Implementations
 
     private async Task SearchWeatherAsync()
     {
@@ -158,7 +115,10 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
             if (weatherData != null)
             {
-                UpdateWeatherData(weatherData);
+                Data = weatherData;
+                Data.UseCelsius = await _settingsService.GetUseCelsiusAsync();
+                OnPropertyChanged(nameof(HasWeatherData));
+
                 await _settingsService.SetLastSearchedCityAsync(SearchCity);
                 await _audioService.PlaySuccessSound();
             }
@@ -170,12 +130,13 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "Error searching weather");
             ErrorMessage = $"Failed to fetch weather: {ex.Message}";
             await _audioService.PlayFailureSound();
         }
     }
 
-    private async Task GetCurrentLocationAsync()
+    private async Task CurrentLocationAsync()
     {
         ErrorMessage = string.Empty;
 
@@ -192,8 +153,11 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
                 if (weatherData != null)
                 {
-                    UpdateWeatherData(weatherData);
+                    Data = weatherData;
+                    Data.UseCelsius = await _settingsService.GetUseCelsiusAsync();
                     SearchCity = weatherData.CityName ?? string.Empty;
+                    OnPropertyChanged(nameof(HasWeatherData));
+
                     await _audioService.PlaySuccessSound();
                 }
                 else
@@ -210,6 +174,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "Error getting current location weather");
             ErrorMessage = $"Failed to fetch weather: {ex.Message}";
             await _audioService.PlayFailureSound();
         }
@@ -232,43 +197,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    #endregion
-
-    #region Helper Methods
-
-    private void UpdateWeatherData(WeatherData weatherData)
-    {
-        Data = weatherData;
-        CityName = weatherData.CityName ?? string.Empty;
-        Description = weatherData.Description ?? string.Empty;
-        OnPropertyChanged(nameof(IconUrl));
-        OnPropertyChanged(nameof(HasWeatherData));
-        UpdateTemperatureDisplay();
-    }
-
-    private void UpdateTemperatureDisplay()
-    {
-        if (Data == null)
-        {
-            TemperatureDisplay = string.Empty;
-            FeelsLikeDisplay = string.Empty;
-            return;
-        }
-
-        if (UseCelsius)
-        {
-            TemperatureDisplay = $"{Data.Temperature:F1}°C";
-            FeelsLikeDisplay = $"Feels like {Data.FeelsLike:F1}°C";
-        }
-        else
-        {
-            var tempF = Data.Temperature * 9 / 5 + 32;
-            var feelsLikeF = Data.FeelsLike * 9 / 5 + 32;
-            TemperatureDisplay = $"{tempF:F1}°F";
-            FeelsLikeDisplay = $"Feels like {feelsLikeF:F1}°F";
-        }
-    }
-
     private void ApplyTheme(bool isDark)
     {
         try
@@ -284,5 +212,12 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    #endregion
+    public async Task ToggleTemperatureUnitAsync()
+    {
+        if (Data != null)
+        {
+            Data.UseCelsius = !Data.UseCelsius;
+            await _settingsService.SetUseCelsiusAsync(Data.UseCelsius);
+        }
+    }
 }
