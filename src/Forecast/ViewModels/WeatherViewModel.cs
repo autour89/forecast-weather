@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Windows.Input;
 using Forecast.Core.Interfaces;
 using Forecast.Core.Models.DAOs;
 using Forecast.Utilities;
+using Microsoft.Maui.ApplicationModel;
 
 namespace Forecast.ViewModels;
 
@@ -17,6 +19,8 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     private bool _isRefreshing;
     private string _temperatureDisplay = string.Empty;
     private string _feelsLikeDisplay = string.Empty;
+    private string _description = string.Empty;
+    private string _cityName = string.Empty;
     private bool _isDarkTheme;
     private bool _useCelsius = true;
 
@@ -32,43 +36,14 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         _audioService = audioService;
         _settingsService = settingsService;
 
-        SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync, () => !IsBusy);
-        GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationWeatherAsync, () => !IsBusy);
+        SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
+        GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationWeatherAsync);
         RefreshCommand = new AsyncCommand(RefreshWeatherAsync);
-        ToggleThemeCommand = new AsyncCommand(ToggleThemeAsync);
-        ToggleTemperatureUnitCommand = new AsyncCommand(ToggleTemperatureUnitAsync);
+
+        _ = InitializeAsync();
     }
 
-    public async Task InitializeAsync()
-    {
-        if (IsBusy)
-            return;
-
-        IsBusy = true;
-        try
-        {
-            await _settingsService.InitializeAsync();
-
-            var lastCity = await _settingsService.GetLastSearchedCityAsync();
-            if (!string.IsNullOrEmpty(lastCity))
-            {
-                SearchCity = lastCity;
-            }
-
-            IsDarkTheme = await _settingsService.GetIsDarkThemeAsync();
-            UseCelsius = await _settingsService.GetUseCelsiusAsync();
-
-            Application.Current!.UserAppTheme = IsDarkTheme ? AppTheme.Dark : AppTheme.Light;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+    #region Properties
 
     public string SearchCity
     {
@@ -100,23 +75,94 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         set => SetProperty(ref _feelsLikeDisplay, value);
     }
 
+    public string Description
+    {
+        get => _description;
+        set => SetProperty(ref _description, value);
+    }
+
+    public string CityName
+    {
+        get => _cityName;
+        set => SetProperty(ref _cityName, value);
+    }
+
+    public string IconUrl => Data?.IconUrl ?? string.Empty;
+
     public bool IsDarkTheme
     {
         get => _isDarkTheme;
-        set => SetProperty(ref _isDarkTheme, value);
+        set
+        {
+            if (SetProperty(ref _isDarkTheme, value))
+            {
+                ApplyTheme(value);
+                _ = _settingsService.SetIsDarkThemeAsync(value);
+            }
+        }
     }
 
     public bool UseCelsius
     {
         get => _useCelsius;
-        set => SetProperty(ref _useCelsius, value);
+        set
+        {
+            if (SetProperty(ref _useCelsius, value))
+            {
+                UpdateTemperatureDisplay();
+                _ = _settingsService.SetUseCelsiusAsync(value);
+            }
+        }
     }
 
-    public ICommand SearchWeatherCommand { get; }
-    public ICommand GetCurrentLocationWeatherCommand { get; }
-    public ICommand RefreshCommand { get; }
-    public ICommand ToggleThemeCommand { get; }
-    public ICommand ToggleTemperatureUnitCommand { get; }
+    public bool HasWeatherData => Data != null;
+
+    #endregion
+
+    #region Commands
+
+    public AsyncCommand SearchWeatherCommand { get; }
+    public AsyncCommand GetCurrentLocationWeatherCommand { get; }
+    public AsyncCommand RefreshCommand { get; }
+
+    #endregion
+
+    #region Initialization
+
+    private async Task InitializeAsync()
+    {
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await _settingsService.InitializeAsync();
+
+            var lastCity = await _settingsService.GetLastSearchedCityAsync();
+            if (!string.IsNullOrEmpty(lastCity))
+            {
+                SearchCity = lastCity;
+            }
+
+            IsDarkTheme = await _settingsService.GetIsDarkThemeAsync();
+            ApplyTheme(IsDarkTheme);
+
+            UseCelsius = await _settingsService.GetUseCelsiusAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Initialization error: {ex}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    #endregion
+
+    #region Command Implementations
 
     private async Task SearchWeatherAsync()
     {
@@ -126,7 +172,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             return;
         }
 
-        IsBusy = true;
         ErrorMessage = string.Empty;
 
         try
@@ -135,10 +180,14 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
             if (weatherData != null)
             {
-                Data = weatherData;
-                UpdateTemperatureDisplay();
+                UpdateWeatherData(weatherData);
                 await _settingsService.SetLastSearchedCityAsync(SearchCity);
                 await _audioService.PlaySuccessSound();
+            }
+            else
+            {
+                ErrorMessage = "City not found";
+                await _audioService.PlayFailureSound();
             }
         }
         catch (Exception ex)
@@ -146,15 +195,10 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             ErrorMessage = $"Failed to fetch weather: {ex.Message}";
             await _audioService.PlayFailureSound();
         }
-        finally
-        {
-            IsBusy = false;
-        }
     }
 
     private async Task GetCurrentLocationWeatherAsync()
     {
-        IsBusy = true;
         ErrorMessage = string.Empty;
 
         try
@@ -170,10 +214,14 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
                 if (weatherData != null)
                 {
-                    Data = weatherData;
+                    UpdateWeatherData(weatherData);
                     SearchCity = weatherData.CityName ?? string.Empty;
-                    UpdateTemperatureDisplay();
                     await _audioService.PlaySuccessSound();
+                }
+                else
+                {
+                    ErrorMessage = "Unable to fetch weather for your location";
+                    await _audioService.PlayFailureSound();
                 }
             }
             else
@@ -187,10 +235,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             ErrorMessage = $"Failed to fetch weather: {ex.Message}";
             await _audioService.PlayFailureSound();
         }
-        finally
-        {
-            IsBusy = false;
-        }
     }
 
     private async Task RefreshWeatherAsync()
@@ -199,7 +243,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
         try
         {
-            if (Data != null && !string.IsNullOrEmpty(SearchCity))
+            if (!string.IsNullOrEmpty(SearchCity))
             {
                 await SearchWeatherAsync();
             }
@@ -210,45 +254,28 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    private async Task ToggleThemeAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            var currentTheme = await _settingsService.GetIsDarkThemeAsync();
-            var newTheme = !currentTheme;
-            await _settingsService.SetIsDarkThemeAsync(newTheme);
-            IsDarkTheme = newTheme;
+    #endregion
 
-            Application.Current!.UserAppTheme = newTheme ? AppTheme.Dark : AppTheme.Light;
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+    #region Helper Methods
 
-    private async Task ToggleTemperatureUnitAsync()
+    private void UpdateWeatherData(WeatherData weatherData)
     {
-        IsBusy = true;
-        try
-        {
-            var currentUnit = await _settingsService.GetUseCelsiusAsync();
-            var newUnit = !currentUnit;
-            await _settingsService.SetUseCelsiusAsync(newUnit);
-            UseCelsius = newUnit;
-            UpdateTemperatureDisplay();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        Data = weatherData;
+        CityName = weatherData.CityName ?? string.Empty;
+        Description = weatherData.Description ?? string.Empty;
+        OnPropertyChanged(nameof(IconUrl));
+        OnPropertyChanged(nameof(HasWeatherData));
+        UpdateTemperatureDisplay();
     }
 
     private void UpdateTemperatureDisplay()
     {
         if (Data == null)
+        {
+            TemperatureDisplay = string.Empty;
+            FeelsLikeDisplay = string.Empty;
             return;
+        }
 
         if (UseCelsius)
         {
@@ -263,4 +290,24 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             FeelsLikeDisplay = $"Feels like {feelsLikeF:F1}°F";
         }
     }
+
+    private void ApplyTheme(bool isDark)
+    {
+        try
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (Application.Current != null)
+                {
+                    Application.Current.UserAppTheme = isDark ? AppTheme.Dark : AppTheme.Light;
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Theme application error: {ex}");
+        }
+    }
+
+    #endregion
 }

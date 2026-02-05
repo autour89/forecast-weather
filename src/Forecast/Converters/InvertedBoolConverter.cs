@@ -1,13 +1,14 @@
+using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
 
 namespace Forecast.Converters;
 
-public class StringNotEmptyConverter : IValueConverter
+public class InvertedBoolConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return !string.IsNullOrWhiteSpace(value as string);
+        return value is bool b && !b;
     }
 
     public object ConvertBack(
@@ -17,6 +18,6 @@ public class StringNotEmptyConverter : IValueConverter
         CultureInfo culture
     )
     {
-        throw new NotImplementedException();
+        return value is bool b && !b;
     }
 }

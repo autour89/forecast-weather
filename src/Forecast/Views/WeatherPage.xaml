@@ -1,17 +1,140 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Forecast.ViewModels"
              x:Class="Forecast.Views.WeatherPage"
-             Title="Weather">
-    <VerticalStackLayout Padding="20" Spacing="20">
-        <Label Text="Weather App" FontSize="32" FontAttributes="Bold" HorizontalOptions="Center" />
-        <Entry Placeholder="Enter city name" Text="{Binding SearchCity}" />
-        <Button Text="Search" Command="{Binding SearchWeatherCommand}" />
-        <Button Text="Current Location" Command="{Binding GetCurrentLocationWeatherCommand}" />
-        <ActivityIndicator IsRunning="{Binding IsBusy}" />
-        <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding HasError}" />
-        <Label Text="{Binding CityName}" FontSize="24" FontAttributes="Bold" />
-        <Label Text="{Binding TemperatureDisplay}" FontSize="48" />
-        <Label Text="{Binding Description}" FontSize="18" />
-    </VerticalStackLayout>
+             x:DataType="viewmodels:WeatherViewModel"
+             Title="Weather Forecast"
+             BackgroundColor="{StaticResource PageBackgroundBrush}">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="20">
+
+                <Label Text="Weather App" 
+                       Style="{StaticResource Headline}"
+                       Margin="0,0,0,10"/>
+
+                <Border StrokeThickness="1" 
+                        Stroke="{StaticResource BorderBrush}"
+                        StrokeShape="RoundRectangle 12"
+                        BackgroundColor="{StaticResource CardBackgroundBrush}"
+                        Padding="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto" 
+                          ColumnSpacing="8">
+                        <Entry Grid.Column="0"
+                               Placeholder="Enter city name"
+                               Text="{Binding SearchCity, Mode=TwoWay}"
+                               ReturnCommand="{Binding SearchWeatherCommand}"
+                               VerticalOptions="Center"/>
+                        
+                        <Button Grid.Column="1"
+                                Text="Search" 
+                                Command="{Binding SearchWeatherCommand}"
+                                IsEnabled="{Binding SearchWeatherCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
+                        
+                        <Button Grid.Column="2"
+                                Text="📍 Here" 
+                                Command="{Binding GetCurrentLocationWeatherCommand}"
+                                IsEnabled="{Binding GetCurrentLocationWeatherCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
+                    </Grid>
+                </Border>
+
+                <ActivityIndicator IsRunning="{Binding SearchWeatherCommand.IsExecuting}" 
+                                   IsVisible="{Binding SearchWeatherCommand.IsExecuting}"
+                                   HorizontalOptions="Center"
+                                   Margin="0,10"/>
+
+                <Border IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                        StrokeThickness="1"
+                        Stroke="Red"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="#20FF0000"
+                        Padding="12">
+                    <Label Text="{Binding ErrorMessage}" 
+                           TextColor="Red"
+                           HorizontalTextAlignment="Center"/>
+                </Border>
+
+                <Border IsVisible="{Binding HasWeatherData}"
+                        StrokeThickness="1"
+                        Stroke="{StaticResource BorderBrush}"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{StaticResource CardBackgroundBrush}"
+                        Padding="20">
+                    <Grid ColumnDefinitions="Auto,*" 
+                          ColumnSpacing="16">
+                        <!-- Weather Icon -->
+                        <Image Grid.Column="0"
+                               Source="{Binding IconUrl}" 
+                               WidthRequest="100" 
+                               HeightRequest="100" 
+                               Aspect="AspectFit"
+                               VerticalOptions="Center"/>
+                        
+                        <VerticalStackLayout Grid.Column="1" 
+                                           Spacing="4"
+                                           VerticalOptions="Center">
+                            <Label Text="{Binding CityName}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                            
+                            <Label Text="{Binding TemperatureDisplay}" 
+                                   FontSize="48" 
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Primary}"/>
+                            
+                            <Label Text="{Binding FeelsLikeDisplay}" 
+                                   FontSize="16"
+                                   TextColor="{StaticResource TextSecondaryBrush}"/>
+                            
+                            <Label Text="{Binding Description}" 
+                                   FontSize="16"
+                                   TextColor="{StaticResource TextSecondaryBrush}"
+                                   TextTransform="Uppercase"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <Border StrokeThickness="1"
+                        Stroke="{StaticResource BorderBrush}"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{StaticResource CardBackgroundBrush}"
+                        Padding="20">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="Settings" 
+                               FontSize="20" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextPrimaryBrush}"/>
+                        
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="🌙 Dark Theme" 
+                                   VerticalOptions="Center"
+                                   FontSize="16"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsDarkTheme, Mode=TwoWay}" 
+                                    HorizontalOptions="End"/>
+                        </Grid>
+                        
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="🌡️ Use Celsius" 
+                                   VerticalOptions="Center"
+                                   FontSize="16"
+                                   TextColor="{StaticResource TextPrimaryBrush}"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding UseCelsius, Mode=TwoWay}" 
+                                    HorizontalOptions="End"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
 </ContentPage>

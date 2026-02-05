@@ -1,14 +1,18 @@
-using System;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace Forecast.Utilities;
 
-// Minimal AsyncCommand: Execute schedules the task and captures exceptions.
-public sealed class AsyncCommand : ICommand
+/// <summary>
+/// Async command implementation following MAUI best practices.
+/// Supports execution tracking and proper error handling.
+/// </summary>
+public sealed class AsyncCommand : ICommand, INotifyPropertyChanged
 {
     private readonly Func<Task> _execute;
     private readonly Func<bool>? _canExecute;
+    private bool _isExecuting;
 
     public AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null)
     {
@@ -17,26 +21,89 @@ public sealed class AsyncCommand : ICommand
     }
 
     public event EventHandler? CanExecuteChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-    public void Execute(object? parameter)
+    /// <summary>
+    /// Gets whether the command is currently executing.
+    /// </summary>
+    public bool IsExecuting
     {
-        // Start the task and observe exceptions; do not use async void.
-        _ = ExecuteAsync();
+        get => _isExecuting;
+        private set
+        {
+            if (_isExecuting != value)
+            {
+                _isExecuting = value;
+                try
+                {
+                    if (MainThread.IsMainThread)
+                    {
+                        PropertyChanged?.Invoke(
+                            this,
+                            new PropertyChangedEventArgs(nameof(IsExecuting))
+                        );
+                        RaiseCanExecuteChanged();
+                    }
+                    else
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            PropertyChanged?.Invoke(
+                                this,
+                                new PropertyChangedEventArgs(nameof(IsExecuting))
+                            );
+                            RaiseCanExecuteChanged();
+                        });
+                    }
+                }
+                catch { }
+            }
+        }
     }
+
+    public bool CanExecute(object? parameter)
+    {
+        if (IsExecuting)
+            return false;
+
+        return _canExecute?.Invoke() ?? true;
+    }
+
+    public void Execute(object? parameter) => _ = ExecuteAsync();
 
     public async Task ExecuteAsync()
     {
+        if (!CanExecute(null))
+            return;
+
+        IsExecuting = true;
+
         try
         {
             await _execute().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"AsyncCommand exception: {ex}");
+            Debug.WriteLine($"AsyncCommand exception: {ex}");
+        }
+        finally
+        {
+            IsExecuting = false;
         }
     }
 
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public void RaiseCanExecuteChanged()
+    {
+        if (MainThread.IsMainThread)
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            });
+        }
+    }
 }
