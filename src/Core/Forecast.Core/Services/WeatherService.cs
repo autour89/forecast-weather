@@ -9,9 +9,7 @@ public class WeatherService : IWeatherService
 {
     private readonly WeatherHttpClientFactory _httpClientFactory;
 
-    public WeatherService(
-        WeatherHttpClientFactory httpClientFactory
-    )
+    public WeatherService(WeatherHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
     }
@@ -24,7 +22,8 @@ public class WeatherService : IWeatherService
                 $"weather?lat={latitude}&lon={longitude}&appid={AppConfiguration.OpenWeatherMapApiKey}&units=metric";
             var response = await _httpClientFactory.GetAsync<WeatherResponse>(endpoint);
 
-            if (response == null) return null;
+            if (response == null)
+                return null;
 
             return MapToWeatherData(response);
         }
@@ -38,12 +37,12 @@ public class WeatherService : IWeatherService
     {
         try
         {
-
             var endpoint =
                 $"weather?q={Uri.EscapeDataString(city)}&appid={AppConfiguration.OpenWeatherMapApiKey}&units=metric";
             var response = await _httpClientFactory.GetAsync<WeatherResponse>(endpoint);
 
-            if (response == null) return null;
+            if (response == null)
+                return null;
 
             return MapToWeatherData(response);
         }
@@ -68,7 +67,7 @@ public class WeatherService : IWeatherService
             WindSpeed = response.Wind?.Speed ?? 0,
             Pressure = response.Main?.Pressure ?? 0,
             IconCode = weather?.Icon,
-            LastUpdated = DateTimeOffset.FromUnixTimeSeconds(response.Dt).DateTime
+            LastUpdated = DateTimeOffset.FromUnixTimeSeconds(response.Dt).DateTime,
         };
     }
 }

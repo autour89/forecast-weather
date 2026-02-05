@@ -10,7 +10,7 @@ public class WeatherHttpClientFactory
 {
     private HttpClient? _httpClient;
     private readonly JsonSerializerOptions _deserializerOptions;
-    private readonly object _lock = new object();
+    private readonly object _lock = new();
 
     public WeatherHttpClientFactory()
     {

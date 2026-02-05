@@ -1,9 +1,12 @@
 using Forecast.Core.Interfaces;
+using Serilog;
 
 namespace Forecast.Services;
 
-public class LocationService : ILocationService
+public class LocationService(ILogger logger) : ILocationService
 {
+    private readonly ILogger _logger = logger;
+
     public async Task<(double Latitude, double Longitude)?> GetCurrentLocationAsync()
     {
         try
@@ -14,6 +17,8 @@ public class LocationService : ILocationService
             {
                 status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
             }
+
+            _logger.Information("Location permission status: {Status}", status);
 
             if (status != PermissionStatus.Granted)
             {
@@ -37,7 +42,7 @@ public class LocationService : ILocationService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Unable to get location: {ex.Message}");
+            _logger.Error(ex, "Unable to get location");
             return null;
         }
     }

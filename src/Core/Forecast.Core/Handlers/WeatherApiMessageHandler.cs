@@ -1,9 +1,7 @@
-
 namespace Forecast.Core.Handlers;
 
 public class WeatherApiMessageHandler : DelegatingHandler
 {
-
     public WeatherApiMessageHandler()
     {
         InnerHandler = new HttpClientHandler();
@@ -16,8 +14,6 @@ public class WeatherApiMessageHandler : DelegatingHandler
     {
         try
         {
-           
-
             var response = await base.SendAsync(request, cancellationToken);
 
             await LogExchangeAsync(request, response);
@@ -26,7 +22,6 @@ public class WeatherApiMessageHandler : DelegatingHandler
         }
         catch (Exception ex)
         {
-
             throw;
         }
     }
@@ -34,7 +29,5 @@ public class WeatherApiMessageHandler : DelegatingHandler
     private async Task LogExchangeAsync(HttpRequestMessage request, HttpResponseMessage response)
     {
         var responseBody = await response.Content.ReadAsStringAsync();
-
-       
     }
 }
