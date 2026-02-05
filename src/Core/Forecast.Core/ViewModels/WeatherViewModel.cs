@@ -3,7 +3,7 @@ using Forecast.Core.Models.DAOs;
 using Forecast.Utilities;
 using Serilog;
 
-namespace Forecast.ViewModels;
+namespace Forecast.Core.ViewModels;
 
 public class WeatherViewModel : BaseViewModel<WeatherData>
 {
@@ -11,6 +11,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     private readonly ILocationService _locationService;
     private readonly IAudioService _audioService;
     private readonly ISettingsService _settingsService;
+    private readonly IThemeService _themeService;
     private readonly ILogger _logger;
 
     private string _searchCity = string.Empty;
@@ -21,6 +22,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         ILocationService locationService,
         IAudioService audioService,
         ISettingsService settingsService,
+        IThemeService themeService,
         ILogger logger
     )
     {
@@ -28,6 +30,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         _locationService = locationService;
         _audioService = audioService;
         _settingsService = settingsService;
+        _themeService = themeService;
         _logger = logger;
 
         SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
@@ -52,7 +55,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         {
             if (SetProperty(ref _isDarkTheme, value))
             {
-                ApplyTheme(value);
+                _themeService.SetTheme(value);
                 _ = _settingsService.SetIsDarkThemeAsync(value);
             }
         }
@@ -84,7 +87,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             SearchCity = !string.IsNullOrEmpty(lastCity) ? lastCity : string.Empty;
 
             IsDarkTheme = await _settingsService.GetIsDarkThemeAsync();
-            ApplyTheme(IsDarkTheme);
+            _themeService.SetTheme(IsDarkTheme);
 
             if (!string.IsNullOrEmpty(lastCity))
             {
@@ -194,21 +197,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         finally
         {
             IsRefreshing = false;
-        }
-    }
-
-    private void ApplyTheme(bool isDark)
-    {
-        try
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Application.Current?.UserAppTheme = isDark ? AppTheme.Dark : AppTheme.Light;
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Error applying theme");
         }
     }
 

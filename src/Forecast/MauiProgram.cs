@@ -1,8 +1,8 @@
 ﻿using Forecast.Core.Configuration;
 using Forecast.Core.Interfaces;
 using Forecast.Core.Services;
+using Forecast.Core.ViewModels;
 using Forecast.Services;
-using Forecast.ViewModels;
 using Forecast.Views;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
@@ -86,6 +86,7 @@ public static class MauiProgram
         services.AddScoped<ISettingsService, SettingsService>();
         services.AddSingleton<ILocationService, LocationService>();
         services.AddSingleton<IAudioService, AudioService>();
+        services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton(AudioManager.Current);
 
         return services;

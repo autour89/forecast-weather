@@ -1,4 +1,4 @@
-using Forecast.ViewModels;
+using Forecast.Core.ViewModels;
 
 namespace Forecast.Views;
 

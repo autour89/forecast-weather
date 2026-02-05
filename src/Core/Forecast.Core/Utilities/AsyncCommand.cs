@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
+using Microsoft.Maui.ApplicationModel;
 
 namespace Forecast.Utilities;
 
