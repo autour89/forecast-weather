@@ -1,6 +1,8 @@
 using Forecast.Core.Interfaces;
 using Forecast.Core.Models.DAOs;
+using Forecast.Core.Utilities;
 using Forecast.Utilities;
+using Microsoft.Maui.Networking;
 using Serilog;
 
 namespace Forecast.Core.ViewModels;
@@ -33,7 +35,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         _themeService = themeService;
         _logger = logger;
 
-        SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
+        SearchCommand = new AsyncCommand(SearchAsync);
         CurrentLocationCommand = new AsyncCommand(CurrentLocationAsync);
         RefreshCommand = new AsyncCommand(RefreshWeatherAsync);
 
@@ -67,7 +69,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
     #region Commands
 
-    public AsyncCommand SearchWeatherCommand { get; }
+    public AsyncCommand SearchCommand { get; }
     public AsyncCommand CurrentLocationCommand { get; }
     public AsyncCommand RefreshCommand { get; }
 
@@ -91,7 +93,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
             if (!string.IsNullOrEmpty(lastCity))
             {
-                await SearchWeatherAsync();
+                await SearchAsync();
             }
         }
         catch (Exception ex)
@@ -102,7 +104,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
     #endregion
 
-    private async Task SearchWeatherAsync()
+    private async Task SearchAsync()
     {
         if (string.IsNullOrWhiteSpace(SearchCity))
         {
@@ -114,6 +116,11 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
         try
         {
+            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+            {
+                throw new NetworkException();
+            }
+
             var weatherData = await _weatherService.GetWeatherByCityAsync(SearchCity);
 
             if (weatherData != null)
@@ -131,6 +138,15 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
                 await _audioService.PlayFailureSound();
             }
         }
+        catch (NetworkException)
+        {
+            _logger.Warning(
+                "No internet connection when trying to search weather for city: {City}",
+                SearchCity
+            );
+            ErrorMessage = "No internet connection. Please check your network and try again.";
+            await _audioService.PlayFailureSound();
+        }
         catch (Exception ex)
         {
             _logger.Error(ex, "Error searching weather");
@@ -145,6 +161,11 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
         try
         {
+            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+            {
+                throw new NetworkException();
+            }
+
             var location = await _locationService.GetCurrentLocationAsync();
 
             if (location.HasValue)
@@ -175,6 +196,12 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
                 await _audioService.PlayFailureSound();
             }
         }
+        catch (NetworkException)
+        {
+            _logger.Warning("No internet connection when trying to get current location weather");
+            ErrorMessage = "No internet connection. Please check your network and try again.";
+            await _audioService.PlayFailureSound();
+        }
         catch (Exception ex)
         {
             _logger.Error(ex, "Error getting current location weather");
@@ -191,7 +218,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         {
             if (!string.IsNullOrEmpty(SearchCity))
             {
-                await SearchWeatherAsync();
+                await SearchAsync();
             }
         }
         finally

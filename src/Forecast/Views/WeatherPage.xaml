@@ -26,13 +26,13 @@
                         <Entry Grid.Column="0"
                                Placeholder="Enter city name"
                                Text="{Binding SearchCity, Mode=TwoWay}"
-                               ReturnCommand="{Binding SearchWeatherCommand}"
+                               ReturnCommand="{Binding SearchCommand}"
                                VerticalOptions="Center"/>
                         
                         <Button Grid.Column="1"
                                 Text="Search" 
-                                Command="{Binding SearchWeatherCommand}"
-                                IsEnabled="{Binding SearchWeatherCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
+                                Command="{Binding SearchCommand}"
+                                IsEnabled="{Binding SearchCommand.IsExecuting, Converter={StaticResource InvertedBoolConverter}}"/>
                         
                         <Button Grid.Column="2"
                                 Text="📍 Here" 
@@ -41,8 +41,8 @@
                     </Grid>
                 </Border>
 
-                <ActivityIndicator IsRunning="{Binding SearchWeatherCommand.IsExecuting}" 
-                                   IsVisible="{Binding SearchWeatherCommand.IsExecuting}"
+                <ActivityIndicator IsRunning="{Binding SearchCommand.IsExecuting}" 
+                                   IsVisible="{Binding SearchCommand.IsExecuting}"
                                    HorizontalOptions="Center"
                                    Margin="0,10"/>
 
