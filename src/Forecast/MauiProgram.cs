@@ -1,11 +1,12 @@
-﻿using System.Text;
-using Forecast.Core.Interfaces;
+﻿using Forecast.Core.Interfaces;
 using Forecast.Core.Services;
 using Forecast.Services;
 using Forecast.ViewModels;
 using Forecast.Views;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 using Serilog;
+using Encoding = System.Text.Encoding;
 
 namespace Forecast;
 
@@ -84,6 +85,7 @@ public static class MauiProgram
         services.AddScoped<ISettingsService, SettingsPersistenceService>();
         services.AddSingleton<ILocationService, LocationService>();
         services.AddSingleton<IAudioService, AudioService>();
+        services.AddSingleton(AudioManager.Current);
 
         return services;
     }
