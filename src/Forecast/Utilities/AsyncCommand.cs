@@ -4,28 +4,17 @@ using System.Windows.Input;
 
 namespace Forecast.Utilities;
 
-/// <summary>
-/// Async command implementation following MAUI best practices.
-/// Supports execution tracking and proper error handling.
-/// </summary>
-public sealed class AsyncCommand : ICommand, INotifyPropertyChanged
+public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null)
+    : ICommand,
+        INotifyPropertyChanged
 {
-    private readonly Func<Task> _execute;
-    private readonly Func<bool>? _canExecute;
+    private readonly Func<Task> _execute = execute;
+    private readonly Func<bool>? _canExecute = canExecute;
     private bool _isExecuting;
-
-    public AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
-    }
 
     public event EventHandler? CanExecuteChanged;
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// <summary>
-    /// Gets whether the command is currently executing.
-    /// </summary>
     public bool IsExecuting
     {
         get => _isExecuting;
@@ -80,7 +69,7 @@ public sealed class AsyncCommand : ICommand, INotifyPropertyChanged
 
         try
         {
-            await _execute().ConfigureAwait(false);
+            await _execute();
         }
         catch (Exception ex)
         {

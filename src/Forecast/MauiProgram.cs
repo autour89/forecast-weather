@@ -1,4 +1,5 @@
-﻿using Forecast.Core.Interfaces;
+﻿using Forecast.Core.Configuration;
+using Forecast.Core.Interfaces;
 using Forecast.Core.Services;
 using Forecast.Services;
 using Forecast.ViewModels;
@@ -37,12 +38,12 @@ public static class MauiProgram
 
             return new LoggerConfiguration()
                 .WriteTo.File(
-                    path: Path.Combine(logPath, "Forecast.log"),
+                    path: Path.Combine(logPath, AppConfiguration.LogFileName),
                     outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level:u4}] {Message:lj}{NewLine}{Exception}",
-                    fileSizeLimitBytes: 1024 * 1024 * 50,
+                    fileSizeLimitBytes: AppConfiguration.LogFileSizeLimitBytes,
                     rollingInterval: RollingInterval.Day,
                     rollOnFileSizeLimit: true,
-                    retainedFileCountLimit: 31,
+                    retainedFileCountLimit: AppConfiguration.LogRetainedFileCountLimit,
                     encoding: Encoding.UTF8
                 )
                 .CreateLogger();
