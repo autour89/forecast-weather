@@ -7,8 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Removed AutoMapper, EF Core and Serilog to simplify startup and avoid platform-specific blocking -->
     <PackageReference Include="System.Text.Json" Version="10.0.2" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,11 @@
-﻿using System.Reflection;
-using System.Text;
-using Forecast.Core.Configuration;
+﻿using System.Text;
 using Forecast.Core.Interfaces;
 using Forecast.Core.Services;
 using Forecast.Services;
 using Forecast.ViewModels;
 using Forecast.Views;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Forecast;
 
@@ -30,7 +29,23 @@ public static class MauiProgram
 
     private static MauiAppBuilder ConfigureLogging(this MauiAppBuilder builder)
     {
-        // Keep default logging (debug) — Serilog removed
+        builder.Services.AddSingleton<Serilog.ILogger>(provider =>
+        {
+            var logPath = Path.Combine(FileSystem.AppDataDirectory, "Logs");
+            Directory.CreateDirectory(logPath);
+
+            return new LoggerConfiguration()
+                .WriteTo.File(
+                    path: Path.Combine(logPath, "Forecast.log"),
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level:u4}] {Message:lj}{NewLine}{Exception}",
+                    fileSizeLimitBytes: 1024 * 1024 * 50,
+                    rollingInterval: RollingInterval.Day,
+                    rollOnFileSizeLimit: true,
+                    retainedFileCountLimit: 31,
+                    encoding: Encoding.UTF8
+                )
+                .CreateLogger();
+        });
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

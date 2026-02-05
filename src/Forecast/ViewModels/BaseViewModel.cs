@@ -6,6 +6,7 @@ namespace Forecast.ViewModels;
 public abstract class BaseViewModel : INotifyPropertyChanged
 {
     private bool _isBusy;
+    private string _errorMessage = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -13,6 +14,12 @@ public abstract class BaseViewModel : INotifyPropertyChanged
     {
         get => _isBusy;
         set => SetProperty(ref _isBusy, value);
+    }
+
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set => SetProperty(ref _errorMessage, value);
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

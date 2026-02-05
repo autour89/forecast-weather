@@ -1,9 +1,7 @@
-using System.Diagnostics;
-using System.Windows.Input;
 using Forecast.Core.Interfaces;
 using Forecast.Core.Models.DAOs;
 using Forecast.Utilities;
-using Microsoft.Maui.ApplicationModel;
+using Serilog;
 
 namespace Forecast.ViewModels;
 
@@ -13,9 +11,9 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     private readonly ILocationService _locationService;
     private readonly IAudioService _audioService;
     private readonly ISettingsService _settingsService;
+    private readonly ILogger _logger;
 
     private string _searchCity = string.Empty;
-    private string _errorMessage = string.Empty;
     private bool _isRefreshing;
     private string _temperatureDisplay = string.Empty;
     private string _feelsLikeDisplay = string.Empty;
@@ -28,13 +26,15 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         IWeatherService weatherService,
         ILocationService locationService,
         IAudioService audioService,
-        ISettingsService settingsService
+        ISettingsService settingsService,
+        ILogger logger
     )
     {
         _weatherService = weatherService;
         _locationService = locationService;
         _audioService = audioService;
         _settingsService = settingsService;
+        _logger = logger;
 
         SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
         GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationWeatherAsync);
@@ -49,12 +49,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     {
         get => _searchCity;
         set => SetProperty(ref _searchCity, value);
-    }
-
-    public string ErrorMessage
-    {
-        get => _errorMessage;
-        set => SetProperty(ref _errorMessage, value);
     }
 
     public bool IsRefreshing
@@ -137,6 +131,8 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         IsBusy = true;
         try
         {
+            _logger.Information("WeatherViewModel initialization started");
+
             await _settingsService.InitializeAsync();
 
             var lastCity = await _settingsService.GetLastSearchedCityAsync();
@@ -152,7 +148,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Initialization error: {ex}");
+            _logger.Error(ex, "Error during WeatherViewModel initialization");
         }
         finally
         {
@@ -297,15 +293,12 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                if (Application.Current != null)
-                {
-                    Application.Current.UserAppTheme = isDark ? AppTheme.Dark : AppTheme.Light;
-                }
+                Application.Current?.UserAppTheme = isDark ? AppTheme.Dark : AppTheme.Light;
             });
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Theme application error: {ex}");
+            _logger.Error(ex, "Error applying theme");
         }
     }
 
