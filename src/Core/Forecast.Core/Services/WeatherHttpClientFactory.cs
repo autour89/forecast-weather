@@ -3,17 +3,21 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Forecast.Core.Configuration;
 using Forecast.Core.Handlers;
+using Serilog;
 
 namespace Forecast.Core.Services;
 
 public class WeatherHttpClientFactory
 {
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
     private HttpClient? _httpClient;
     private readonly JsonSerializerOptions _deserializerOptions;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
+    private readonly ILogger _logger;
 
-    public WeatherHttpClientFactory()
+    public WeatherHttpClientFactory(ILogger logger)
     {
+        _logger = logger;
         _deserializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -29,10 +33,10 @@ public class WeatherHttpClientFactory
             {
                 if (_httpClient == null)
                 {
-                    _httpClient = new HttpClient(new WeatherApiMessageHandler())
+                    _httpClient = new HttpClient(new WeatherApiMessageHandler(_logger))
                     {
                         BaseAddress = new Uri(AppConfiguration.OpenWeatherMapBaseUrl),
-                        Timeout = TimeSpan.FromSeconds(30),
+                        Timeout = Timeout,
                     };
                     _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 }

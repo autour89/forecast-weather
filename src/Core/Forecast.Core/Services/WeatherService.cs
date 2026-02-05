@@ -2,17 +2,15 @@ using Forecast.Core.Configuration;
 using Forecast.Core.Interfaces;
 using Forecast.Core.Models.DAOs;
 using Forecast.Core.Models.DTOs;
+using Serilog;
 
 namespace Forecast.Core.Services;
 
-public class WeatherService : IWeatherService
+public class WeatherService(ILogger logger, WeatherHttpClientFactory httpClientFactory)
+    : IWeatherService
 {
-    private readonly WeatherHttpClientFactory _httpClientFactory;
-
-    public WeatherService(WeatherHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+    private readonly WeatherHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly ILogger _logger = logger;
 
     public async Task<WeatherData?> GetWeatherByCoordinatesAsync(double latitude, double longitude)
     {
@@ -27,8 +25,9 @@ public class WeatherService : IWeatherService
 
             return MapToWeatherData(response);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.Error(ex, "Failed to get weather by coordinates");
             throw;
         }
     }
@@ -46,8 +45,9 @@ public class WeatherService : IWeatherService
 
             return MapToWeatherData(response);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.Error(ex, "Failed to get weather by city");
             throw;
         }
     }

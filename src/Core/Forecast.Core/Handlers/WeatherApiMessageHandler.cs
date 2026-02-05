@@ -1,9 +1,14 @@
+using Serilog;
+
 namespace Forecast.Core.Handlers;
 
 public class WeatherApiMessageHandler : DelegatingHandler
 {
-    public WeatherApiMessageHandler()
+    private readonly ILogger _logger;
+
+    public WeatherApiMessageHandler(ILogger logger)
     {
+        _logger = logger;
         InnerHandler = new HttpClientHandler();
     }
 
@@ -22,6 +27,7 @@ public class WeatherApiMessageHandler : DelegatingHandler
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "Error sending HTTP request");
             throw;
         }
     }
@@ -29,5 +35,12 @@ public class WeatherApiMessageHandler : DelegatingHandler
     private async Task LogExchangeAsync(HttpRequestMessage request, HttpResponseMessage response)
     {
         var responseBody = await response.Content.ReadAsStringAsync();
+        _logger.Information(
+            "HTTP {Method} {RequestUri} => {StatusCode}\nResponse Body: {ResponseBody}",
+            request.Method,
+            request.RequestUri,
+            (int)response.StatusCode,
+            responseBody
+        );
     }
 }
