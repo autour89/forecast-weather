@@ -2,11 +2,11 @@ using Serilog;
 
 namespace Forecast.Core.Handlers;
 
-public class WeatherApiMessageHandler : DelegatingHandler
+public class MessageHandler : DelegatingHandler
 {
     private readonly ILogger _logger;
 
-    public WeatherApiMessageHandler(ILogger logger)
+    public MessageHandler(ILogger logger)
     {
         _logger = logger;
         InnerHandler = new HttpClientHandler();

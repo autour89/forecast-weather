@@ -32,7 +32,7 @@ public class HttpClientFactory
             {
                 if (_httpClient == null)
                 {
-                    _httpClient = new HttpClient(new WeatherApiMessageHandler(_logger))
+                    _httpClient = new HttpClient(new MessageHandler(_logger))
                     {
                         BaseAddress = new Uri(AppConfiguration.OpenWeatherMapBaseUrl),
                         Timeout = Timeout,
