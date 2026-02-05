@@ -14,7 +14,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     private readonly ILogger _logger;
 
     private string _searchCity = string.Empty;
-    private bool _isRefreshing;
     private string _temperatureDisplay = string.Empty;
     private string _feelsLikeDisplay = string.Empty;
     private string _description = string.Empty;
@@ -37,7 +36,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         _logger = logger;
 
         SearchWeatherCommand = new AsyncCommand(SearchWeatherAsync);
-        GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationWeatherAsync);
+        GetCurrentLocationWeatherCommand = new AsyncCommand(GetCurrentLocationAsync);
         RefreshCommand = new AsyncCommand(RefreshWeatherAsync);
 
         _ = InitializeAsync();
@@ -49,12 +48,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
     {
         get => _searchCity;
         set => SetProperty(ref _searchCity, value);
-    }
-
-    public bool IsRefreshing
-    {
-        get => _isRefreshing;
-        set => SetProperty(ref _isRefreshing, value);
     }
 
     public string TemperatureDisplay
@@ -123,12 +116,8 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
     #region Initialization
 
-    private async Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
-        if (IsBusy)
-            return;
-
-        IsBusy = true;
         try
         {
             _logger.Information("WeatherViewModel initialization started");
@@ -136,10 +125,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             await _settingsService.InitializeAsync();
 
             var lastCity = await _settingsService.GetLastSearchedCityAsync();
-            if (!string.IsNullOrEmpty(lastCity))
-            {
-                SearchCity = lastCity;
-            }
+            SearchCity = !string.IsNullOrEmpty(lastCity) ? lastCity : string.Empty;
 
             IsDarkTheme = await _settingsService.GetIsDarkThemeAsync();
             ApplyTheme(IsDarkTheme);
@@ -149,10 +135,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         catch (Exception ex)
         {
             _logger.Error(ex, "Error during WeatherViewModel initialization");
-        }
-        finally
-        {
-            IsBusy = false;
         }
     }
 
@@ -193,7 +175,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    private async Task GetCurrentLocationWeatherAsync()
+    private async Task GetCurrentLocationAsync()
     {
         ErrorMessage = string.Empty;
 
