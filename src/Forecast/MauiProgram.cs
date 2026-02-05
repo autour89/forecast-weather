@@ -83,7 +83,7 @@ public static class MauiProgram
     {
         services.AddScoped<WeatherHttpClientFactory>();
         services.AddScoped<IWeatherService, WeatherService>();
-        services.AddScoped<ISettingsService, SettingsPersistenceService>();
+        services.AddScoped<ISettingsService, SettingsService>();
         services.AddSingleton<ILocationService, LocationService>();
         services.AddSingleton<IAudioService, AudioService>();
         services.AddSingleton(AudioManager.Current);

@@ -2,13 +2,13 @@ using Forecast.Core.Interfaces;
 
 namespace Forecast.Core.Services;
 
-public class SettingsPersistenceService : ISettingsService
+public class SettingsService : ISettingsService
 {
     private bool _isDarkTheme = false;
     private bool _useCelsius = true;
     private string _lastSearchedCity = string.Empty;
 
-    public SettingsPersistenceService() { }
+    public SettingsService() { }
 
     public Task InitializeAsync()
     {
