@@ -12,7 +12,6 @@ public class SettingsService : ISettingsService
 
     public Task InitializeAsync()
     {
-        // In-memory settings (EF Core removed)
         return Task.CompletedTask;
     }
 
