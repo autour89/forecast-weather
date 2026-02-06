@@ -88,13 +88,14 @@ public static class MauiProgram
 
     private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
-        services.AddScoped<HttpClientFactory>();
-        services.AddScoped<IWeatherService, WeatherService>();
-        services.AddScoped<ISettingsService, SettingsService>();
-        services.AddSingleton<ILocationService, LocationService>();
-        services.AddSingleton<IAudioService, AudioService>();
-        services.AddSingleton<IThemeService, ThemeService>();
-        services.AddSingleton(AudioManager.Current);
+        services
+            .AddScoped<HttpClientFactory>()
+            .AddScoped<IWeatherService, WeatherService>()
+            .AddScoped<ISettingsService, SettingsService>()
+            .AddSingleton<ILocationService, LocationService>()
+            .AddSingleton<IAudioService, AudioService>()
+            .AddSingleton<IThemeService, ThemeService>()
+            .AddSingleton(AudioManager.Current);
 
         return services;
     }
