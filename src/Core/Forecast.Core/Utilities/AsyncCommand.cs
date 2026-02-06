@@ -1,21 +1,18 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Input;
+using Forecast.Core.Models;
 using Microsoft.Maui.ApplicationModel;
 
 namespace Forecast.Utilities;
 
 public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null)
-    : ICommand,
-        INotifyPropertyChanged
+    : ObservableObject,
+        ICommand
 {
     private readonly Func<Task> _execute = execute;
     private readonly Func<bool>? _canExecute = canExecute;
     private bool _isExecuting;
 
     public event EventHandler? CanExecuteChanged;
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public bool IsExecuting
     {
         get => _isExecuting;
@@ -24,29 +21,20 @@ public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = nu
             if (_isExecuting != value)
             {
                 _isExecuting = value;
-                try
+
+                if (MainThread.IsMainThread)
                 {
-                    if (MainThread.IsMainThread)
-                    {
-                        PropertyChanged?.Invoke(
-                            this,
-                            new PropertyChangedEventArgs(nameof(IsExecuting))
-                        );
-                        RaiseCanExecuteChanged();
-                    }
-                    else
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            PropertyChanged?.Invoke(
-                                this,
-                                new PropertyChangedEventArgs(nameof(IsExecuting))
-                            );
-                            RaiseCanExecuteChanged();
-                        });
-                    }
+                    OnPropertyChanged(nameof(IsExecuting));
+                    RaiseCanExecuteChanged();
                 }
-                catch { }
+                else
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        OnPropertyChanged(nameof(IsExecuting));
+                        RaiseCanExecuteChanged();
+                    });
+                }
             }
         }
     }
@@ -68,18 +56,9 @@ public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = nu
 
         IsExecuting = true;
 
-        try
-        {
-            await _execute();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"AsyncCommand exception: {ex}");
-        }
-        finally
-        {
-            IsExecuting = false;
-        }
+        await _execute?.Invoke();
+
+        IsExecuting = false;
     }
 
     public void RaiseCanExecuteChanged()
