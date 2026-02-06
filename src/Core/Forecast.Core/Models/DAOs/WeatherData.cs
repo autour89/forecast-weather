@@ -1,9 +1,6 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
 namespace Forecast.Core.Models.DAOs;
 
-public class WeatherData : INotifyPropertyChanged
+public class WeatherData : ObservableObject
 {
     private string? _cityName;
     private string? _country;
@@ -17,8 +14,6 @@ public class WeatherData : INotifyPropertyChanged
     private string? _iconCode;
     private DateTime _lastUpdated;
     private bool _useCelsius = true;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public string? CityName
     {
@@ -35,25 +30,19 @@ public class WeatherData : INotifyPropertyChanged
     public double Temperature
     {
         get => _temperature;
-        set
-        {
-            if (SetProperty(ref _temperature, value))
-            {
-                OnPropertyChanged(nameof(TemperatureDisplay));
-            }
-        }
+        set =>
+            SetProperty(
+                ref _temperature,
+                value,
+                () => OnPropertyChanged(nameof(TemperatureDisplay))
+            );
     }
 
     public double FeelsLike
     {
         get => _feelsLike;
-        set
-        {
-            if (SetProperty(ref _feelsLike, value))
-            {
-                OnPropertyChanged(nameof(FeelsLikeDisplay));
-            }
-        }
+        set =>
+            SetProperty(ref _feelsLike, value, () => OnPropertyChanged(nameof(FeelsLikeDisplay)));
     }
 
     public string? Description
@@ -89,13 +78,7 @@ public class WeatherData : INotifyPropertyChanged
     public string? IconCode
     {
         get => _iconCode;
-        set
-        {
-            if (SetProperty(ref _iconCode, value))
-            {
-                OnPropertyChanged(nameof(IconUrl));
-            }
-        }
+        set => SetProperty(ref _iconCode, value, () => OnPropertyChanged(nameof(IconUrl)));
     }
 
     public DateTime LastUpdated
@@ -107,14 +90,16 @@ public class WeatherData : INotifyPropertyChanged
     public bool UseCelsius
     {
         get => _useCelsius;
-        set
-        {
-            if (SetProperty(ref _useCelsius, value))
-            {
-                OnPropertyChanged(nameof(TemperatureDisplay));
-                OnPropertyChanged(nameof(FeelsLikeDisplay));
-            }
-        }
+        set =>
+            SetProperty(
+                ref _useCelsius,
+                value,
+                () =>
+                {
+                    OnPropertyChanged(nameof(TemperatureDisplay));
+                    OnPropertyChanged(nameof(FeelsLikeDisplay));
+                }
+            );
     }
 
     public string IconUrl =>
@@ -144,24 +129,5 @@ public class WeatherData : INotifyPropertyChanged
             var feelsLikeF = FeelsLike * 9 / 5 + 32;
             return $"Feels like {feelsLikeF:F1}°F";
         }
-    }
-
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetProperty<T>(
-        ref T storage,
-        T value,
-        [CallerMemberName] string? propertyName = null
-    )
-    {
-        if (EqualityComparer<T>.Default.Equals(storage, value))
-            return false;
-
-        storage = value;
-        OnPropertyChanged(propertyName);
-        return true;
     }
 }
