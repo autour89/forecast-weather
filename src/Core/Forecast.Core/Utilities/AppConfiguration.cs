@@ -8,4 +8,6 @@ public static class AppConfiguration
     public const string LogFileName = "Forecast.log";
     public const long LogFileSizeLimitBytes = 1024 * 1024 * 50;
     public const int LogRetainedFileCountLimit = 31;
+    public const string ByCoordinates = "weather?lat={0}&lon={1}&appid={2}&units=metric";
+    public const string ByCity = "weather?q={0}&appid={1}&units=metric";
 }

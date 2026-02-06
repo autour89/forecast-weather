@@ -1,5 +1,7 @@
-﻿using Forecast.Core.Configuration;
+﻿using AutoMapper;
+using Forecast.Core.Configuration;
 using Forecast.Core.Interfaces;
+using Forecast.Core.Mappings;
 using Forecast.Core.Services;
 using Forecast.Core.ViewModels;
 using Forecast.Services;
@@ -69,7 +71,13 @@ public static class MauiProgram
 
     private static IServiceCollection RegisterAutoMapper(this IServiceCollection services)
     {
-        // AutoMapper removed: no-op registration
+        var config = new MapperConfiguration(cfg =>
+        {
+            cfg.AddProfile<MappingProfile>();
+        });
+
+        config.AssertConfigurationIsValid();
+        services.AddSingleton<IMapper>(config.CreateMapper());
         return services;
     }
 

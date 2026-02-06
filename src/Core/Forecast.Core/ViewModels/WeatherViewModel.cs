@@ -121,7 +121,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
                 throw new NetworkException();
             }
 
-            var weatherData = await _weatherService.GetWeatherByCityAsync(SearchCity);
+            var weatherData = await _weatherService.ByCityAsync(SearchCity);
 
             if (weatherData != null)
             {
@@ -170,7 +170,7 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
             if (location.HasValue)
             {
-                var weatherData = await _weatherService.GetWeatherByCoordinatesAsync(
+                var weatherData = await _weatherService.ByCoordinatesAsync(
                     location.Value.Latitude,
                     location.Value.Longitude
                 );

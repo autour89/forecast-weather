@@ -52,6 +52,19 @@ public class HttpClientFactory
         return await ProcessResponseAsync<TResponse>(response);
     }
 
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest request)
+        where TRequest : class
+        where TResponse : class
+    {
+        var json = JsonSerializer.Serialize(request, _serializerOptions);
+
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await GetHttpClient().PostAsync(endpoint, content);
+
+        return await ProcessResponseAsync<TResponse>(response);
+    }
+
     private async Task<TResponse?> ProcessResponseAsync<TResponse>(HttpResponseMessage httpResponse)
         where TResponse : class
     {
