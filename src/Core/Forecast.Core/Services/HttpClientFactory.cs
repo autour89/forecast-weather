@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Forecast.Core.Configuration;
@@ -10,6 +11,7 @@ public class HttpClientFactory
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
     private HttpClient? _httpClient;
+    private readonly JsonSerializerOptions _serializerOptions;
     private readonly JsonSerializerOptions _deserializerOptions;
     private readonly Lock _lock = new();
     private readonly ILogger _logger;
@@ -17,6 +19,14 @@ public class HttpClientFactory
     public HttpClientFactory(ILogger logger)
     {
         _logger = logger;
+
+        _serializerOptions = new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            WriteIndented = false,
+            Converters = { new JsonStringEnumConverter() },
+        };
+
         _deserializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
