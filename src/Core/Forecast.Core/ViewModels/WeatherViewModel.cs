@@ -1,7 +1,7 @@
 using Forecast.Core.Interfaces;
+using Forecast.Core.Models;
 using Forecast.Core.Models.DAOs;
 using Forecast.Core.Utilities;
-using Forecast.Utilities;
 using Microsoft.Maui.Networking;
 using Serilog;
 

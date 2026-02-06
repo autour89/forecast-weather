@@ -1,7 +1,7 @@
 using System.Windows.Input;
-using Forecast.Core.Models;
+using Forecast.Utilities;
 
-namespace Forecast.Utilities;
+namespace Forecast.Core.Models;
 
 public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null)
     : ObservableObject,
