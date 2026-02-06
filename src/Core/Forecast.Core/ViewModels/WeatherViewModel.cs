@@ -75,8 +75,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
     #endregion
 
-    #region Initialization
-
     public override async Task InitializeAsync()
     {
         try
@@ -102,8 +100,6 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
         }
     }
 
-    #endregion
-
     private async Task SearchAsync()
     {
         if (string.IsNullOrWhiteSpace(SearchCity))
@@ -121,11 +117,10 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
                 throw new NetworkException();
             }
 
-            var weatherData = await _weatherService.ByCityAsync(SearchCity);
+            Data = await _weatherService.ByCityAsync(SearchCity);
 
-            if (weatherData != null)
+            if (Data != null)
             {
-                Data = weatherData;
                 Data.UseCelsius = await _settingsService.GetUseCelsiusAsync();
                 OnPropertyChanged(nameof(HasWeatherData));
 
@@ -161,6 +156,8 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
         try
         {
+            IsBusy = true;
+
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
             {
                 throw new NetworkException();
@@ -170,16 +167,15 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
 
             if (location.HasValue)
             {
-                var weatherData = await _weatherService.ByCoordinatesAsync(
+                Data = await _weatherService.ByCoordinatesAsync(
                     location.Value.Latitude,
                     location.Value.Longitude
                 );
 
-                if (weatherData != null)
+                if (Data != null)
                 {
-                    Data = weatherData;
                     Data.UseCelsius = await _settingsService.GetUseCelsiusAsync();
-                    SearchCity = weatherData.CityName ?? string.Empty;
+                    SearchCity = Data.CityName ?? string.Empty;
                     OnPropertyChanged(nameof(HasWeatherData));
 
                     await _audioService.PlaySuccessSound();
@@ -207,6 +203,10 @@ public class WeatherViewModel : BaseViewModel<WeatherData>
             _logger.Error(ex, "Error getting current location weather");
             ErrorMessage = $"Failed to fetch weather: {ex.Message}";
             await _audioService.PlayFailureSound();
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
