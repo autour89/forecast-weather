@@ -77,7 +77,7 @@ public static class MauiProgram
         });
 
         config.AssertConfigurationIsValid();
-        services.AddSingleton<IMapper>(config.CreateMapper());
+        services.AddSingleton(config.CreateMapper());
         return services;
     }
 
