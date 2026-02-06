@@ -1,6 +1,5 @@
 using System.Windows.Input;
 using Forecast.Core.Models;
-using Microsoft.Maui.ApplicationModel;
 
 namespace Forecast.Utilities;
 
@@ -22,19 +21,11 @@ public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = nu
             {
                 _isExecuting = value;
 
-                if (MainThread.IsMainThread)
+                Extensions.RunOnMainThread(() =>
                 {
                     OnPropertyChanged(nameof(IsExecuting));
                     RaiseCanExecuteChanged();
-                }
-                else
-                {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        OnPropertyChanged(nameof(IsExecuting));
-                        RaiseCanExecuteChanged();
-                    });
-                }
+                });
             }
         }
     }
@@ -63,16 +54,6 @@ public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = nu
 
     public void RaiseCanExecuteChanged()
     {
-        if (MainThread.IsMainThread)
-        {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        }
-        else
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-            });
-        }
+        Extensions.RunOnMainThread(() => CanExecuteChanged?.Invoke(this, EventArgs.Empty));
     }
 }
