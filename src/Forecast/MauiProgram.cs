@@ -24,7 +24,7 @@ public static class MauiProgram
         builder
             .Services.RegisterAutoMapper()
             .RegisterDatabase()
-            .RegisterApplicationServices()
+            .RegisterServices()
             .RegisterViewModels()
             .RegisterViews();
 
@@ -86,7 +86,7 @@ public static class MauiProgram
         return services;
     }
 
-    private static IServiceCollection RegisterApplicationServices(this IServiceCollection services)
+    private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
         services.AddScoped<HttpClientFactory>();
         services.AddScoped<IWeatherService, WeatherService>();
