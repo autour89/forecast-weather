@@ -83,7 +83,6 @@ public static class MauiProgram
 
     private static IServiceCollection RegisterDatabase(this IServiceCollection services)
     {
-        // EF Core removed — no DB registration
         return services;
     }
 
